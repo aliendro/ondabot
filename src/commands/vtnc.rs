@@ -30,7 +30,7 @@ pub fn register() -> CreateCommand {
         .add_option(
             CreateCommandOption::new(
                 CommandOptionType::String,
-                "Destino",
+                "destino", // should be lowercase
                 "quem você deseja agraciar com esta bela mensagem",
             )
             .required(true),
