@@ -15,7 +15,9 @@ async fn serenity(
         .context("'DISCORD_TOKEN' was not found")?;
 
     // Set gateway intents, which decides what events the bot will be notified about
-    let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
+    let intents = GatewayIntents::GUILD_MESSAGES
+        | GatewayIntents::MESSAGE_CONTENT
+        | GatewayIntents::GUILD_INTEGRATIONS;
 
     let client = Client::builder(&token, intents)
         .event_handler(Handler { secrets })

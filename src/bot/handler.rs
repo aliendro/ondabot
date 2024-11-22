@@ -18,9 +18,6 @@ impl EventHandler for Handler {
             debug!("Received command interaction: {command:#?}");
 
             let content = match command.data.name.as_str() {
-                "info" => Some(commands::info::run(&command.data.options())),
-                "build" => Some(commands::build::run(&command.data.options())),
-                "counter" => Some(commands::counter::run(&command.data.options())),
                 "pregas" => Some(commands::pregas::run(&command.data.options())),
                 "vtnc" => Some(commands::vtnc::run(&command.data.options())),
                 _ => Some("not implemented :(".to_string()),
@@ -39,29 +36,6 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         info!("{} is connected!", ready.user.name);
 
-        let somente_onda_id = GuildId::new(
-            self.secrets
-                .get("SOMENTE_ONDA_ID")
-                .expect("'SOMENTE_ONDA_ID' was not found")
-                .parse()
-                .expect("'SOMENTE_ONDA_ID' must be an integer"),
-        );
-
-        let somente_onda_commands = somente_onda_id
-            .set_commands(
-                &ctx.http,
-                vec![
-                    commands::info::register(),
-                    commands::build::register(),
-                    commands::counter::register(),
-                    commands::vtnc::register(),
-                ],
-            )
-            .await;
-
-        info!("Registered SOMENTE_ONDA commands!");
-        debug!("SOMENTE_ONDA commands: {somente_onda_commands:#?}");
-
         let cml_id = GuildId::new(
             self.secrets
                 .get("CML_ID")
@@ -70,14 +44,19 @@ impl EventHandler for Handler {
                 .expect("'CML_ID' must be an integer"),
         );
 
-        let cml_commands = cml_id
+        let commands = cml_id
             .set_commands(
                 &ctx.http,
                 vec![commands::pregas::register(), commands::vtnc::register()],
             )
             .await;
 
-        info!("Registered CML commands!");
-        debug!("CML commands: {cml_commands:#?}");
+        match commands {
+            Ok(commands) => {
+                info!("Registered CML commands!");
+                debug!("CML commands: {commands:#?}");
+            }
+            Err(why) => error!("Failed to register commands: {why:?}"),
+        }
     }
 }
