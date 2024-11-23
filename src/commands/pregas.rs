@@ -3,8 +3,8 @@ use serenity::all::{CreateCommand, ResolvedOption};
 
 pub fn run(_options: &[ResolvedOption]) -> String {
     format!(
-        "Kamikaze perdeu {} pregas hoje.",
-        rand::thread_rng().gen_range(2..=20)
+        "Você tirou {} pregas do Kamikaze.",
+        rand::thread_rng().gen_range(2..=100)
     )
 }
 
