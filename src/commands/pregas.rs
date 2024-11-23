@@ -9,10 +9,5 @@ pub fn run(_options: &[ResolvedOption]) -> String {
 }
 
 pub fn register() -> CreateCommand {
-    CreateCommand::new("pregas")
-        .description("Retrieves damage estimation on Kamikaze's brioco")
-        .description_localized(
-            "pt-BR",
-            "Retorna uma estimativa das pregas perdidas do Kamikaze",
-        )
+    CreateCommand::new("pregas").description("Performs a prega check on Kamikaze")
 }
