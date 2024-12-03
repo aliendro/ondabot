@@ -1,3 +1,7 @@
+use std::sync::Arc;
+
+use crate::commands;
+use chatgpt::client::ChatGPT;
 use serenity::all::{
     async_trait, model::gateway::Ready, prelude::*, CreateInteractionResponse,
     CreateInteractionResponseMessage, GuildId, Interaction,
@@ -5,10 +9,9 @@ use serenity::all::{
 use shuttle_runtime::SecretStore;
 use tracing::{debug, error, info};
 
-use crate::commands;
-
 pub struct Handler {
     pub secrets: SecretStore,
+    pub openai_client: Arc<ChatGPT>,
 }
 
 #[async_trait]
@@ -18,8 +21,9 @@ impl EventHandler for Handler {
             debug!("Received command interaction: {command:#?}");
 
             let content = match command.data.name.as_str() {
-                "pregas" => Some(commands::pregas::run(&command.data.options())),
+                "gepeto" => Some(commands::gepeto::run(&command.data.options(), &self).await),
                 "vtnc" => Some(commands::vtnc::run(&command.data.options())),
+                "pregas" => Some(commands::pregas::run(&command.data.options())),
                 _ => Some("not implemented :(".to_string()),
             };
 
@@ -47,7 +51,11 @@ impl EventHandler for Handler {
         let commands = cml_id
             .set_commands(
                 &ctx.http,
-                vec![commands::pregas::register(), commands::vtnc::register()],
+                vec![
+                    commands::gepeto::register(),
+                    commands::vtnc::register(),
+                    // commands::pregas::register(),
+                ],
             )
             .await;
 
