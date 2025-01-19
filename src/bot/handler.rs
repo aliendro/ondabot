@@ -8,6 +8,7 @@ use serenity::all::{
 };
 use shuttle_runtime::SecretStore;
 use tracing::{debug, error, info};
+use unicode_segmentation::UnicodeSegmentation;
 
 pub struct Handler {
     pub secrets: SecretStore,
@@ -28,10 +29,25 @@ impl EventHandler for Handler {
             };
 
             if let Some(content) = content {
-                let data = CreateInteractionResponseMessage::new().content(content);
-                let builder = CreateInteractionResponse::Message(data);
-                if let Err(why) = command.create_response(&ctx.http, builder).await {
-                    error!("Cannot respond to slash command: {why}");
+                let mut contents: Vec<String> = Vec::new();
+                if content.len() > 2000 {
+                    content
+                        .graphemes(true)
+                        .collect::<Vec<&str>>()
+                        .chunks(2000)
+                        .map(|chunk| chunk.concat())
+                        .for_each(|message| contents.push(message));
+                } else {
+                    contents.push(content);
+                }
+
+                for message in contents {
+                    println!("{message}");
+                    let data = CreateInteractionResponseMessage::new().content(message);
+                    let builder = CreateInteractionResponse::Message(data);
+                    if let Err(why) = command.create_response(&ctx.http, builder).await {
+                        error!("Cannot respond to slash command: {why}");
+                    }
                 }
             }
         }
