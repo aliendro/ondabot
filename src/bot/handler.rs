@@ -21,7 +21,7 @@ impl EventHandler for Handler {
             debug!("Received command interaction: {command:#?}");
 
             let content = match command.data.name.as_str() {
-                "gepeto" => Some(commands::gepeto::run(&command.data.options(), &self).await),
+                // "gepeto" => Some(commands::gepeto::run(&command.data.options(), &self).await),
                 "vtnc" => Some(commands::vtnc::run(&command.data.options())),
                 "pregas" => Some(commands::pregas::run(&command.data.options())),
                 _ => Some("not implemented :(".to_string()),
@@ -70,7 +70,7 @@ impl EventHandler for Handler {
             .set_commands(
                 &ctx.http,
                 vec![
-                    commands::gepeto::register(),
+                    // commands::gepeto::register(),
                     commands::vtnc::register(),
                     commands::pregas::register(),
                 ],
