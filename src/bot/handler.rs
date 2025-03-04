@@ -70,7 +70,7 @@ impl EventHandler for Handler {
                 vec![
                     commands::gepeto::register(),
                     commands::vtnc::register(),
-                    // commands::pregas::register(),
+                    commands::pregas::register(),
                 ],
             )
             .await;
