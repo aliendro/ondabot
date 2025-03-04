@@ -3,8 +3,7 @@ use std::sync::Arc;
 use crate::commands;
 use chatgpt::client::ChatGPT;
 use serenity::all::{
-    async_trait, model::gateway::Ready, prelude::*, CreateInteractionResponse,
-    CreateInteractionResponseMessage, GuildId, Interaction,
+    async_trait, model::gateway::Ready, prelude::*, GuildId, Interaction, MessageBuilder,
 };
 use shuttle_runtime::SecretStore;
 use tracing::{debug, error, info};
@@ -43,9 +42,12 @@ impl EventHandler for Handler {
 
                 for message in contents {
                     println!("{message}");
-                    let data = CreateInteractionResponseMessage::new().content(message);
-                    let builder = CreateInteractionResponse::Message(data);
-                    if let Err(why) = command.create_response(&ctx.http, builder).await {
+                    // TODO: Break response into chunks and send them separately
+                    // by editing existing message
+                    let response = MessageBuilder::new()
+                        .push_codeblock(message, Some(""))
+                        .build();
+                    if let Err(why) = command.channel_id.say(&ctx.http, &response).await {
                         error!("Cannot respond to slash command: {why}");
                     }
                 }
