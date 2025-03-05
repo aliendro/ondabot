@@ -1,11 +1,8 @@
-use std::sync::Arc;
-
 use crate::commands;
 use chatgpt::client::ChatGPT;
-use serenity::all::{
-    async_trait, model::gateway::Ready, prelude::*, GuildId, Interaction, MessageBuilder,
-};
+use serenity::all::*;
 use shuttle_runtime::SecretStore;
+use std::{sync::Arc, time::Duration};
 use tracing::{debug, error, info};
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -17,41 +14,56 @@ pub struct Handler {
 #[async_trait]
 impl EventHandler for Handler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
-        if let Interaction::Command(command) = interaction {
-            debug!("Received command interaction: {command:#?}");
+        let Interaction::Command(command) = interaction else {
+            return;
+        };
 
-            let content = match command.data.name.as_str() {
-                // "gepeto" => Some(commands::gepeto::run(&command.data.options(), &self).await),
-                "vtnc" => Some(commands::vtnc::run(&command.data.options())),
-                "pregas" => Some(commands::pregas::run(&command.data.options())),
-                _ => Some("not implemented :(".to_string()),
-            };
+        debug!("Received command interaction: {command:#?}");
 
-            if let Some(content) = content {
-                let mut contents: Vec<String> = Vec::new();
-                if content.len() > 2000 {
-                    content
-                        .graphemes(true)
-                        .collect::<Vec<&str>>()
-                        .chunks(2000)
-                        .map(|chunk| chunk.concat())
-                        .for_each(|message| contents.push(message));
-                } else {
-                    contents.push(content);
-                }
+        let msg = CreateInteractionResponseMessage::new().content("Pensando...");
+        let builder = CreateInteractionResponse::Defer(msg);
+        if let Err(why) = command.create_response(&ctx.http, builder).await {
+            error!("Failed to generate interaction response: {why}");
+        }
 
-                for message in contents {
-                    println!("{message}");
-                    // TODO: Break response into chunks and send them separately
-                    // by editing existing message
-                    let response = MessageBuilder::new()
-                        .push_codeblock(message, Some(""))
-                        .build();
-                    if let Err(why) = command.channel_id.say(&ctx.http, &response).await {
-                        error!("Cannot respond to slash command: {why}");
-                    }
-                }
-            }
+        let content = match command.data.name.as_str() {
+            "gepeto" => Some(commands::gepeto::run(&command.data.options(), &self).await),
+            "vtnc" => Some(commands::vtnc::run(&command.data.options())),
+            "pregas" => Some(commands::pregas::run(&command.data.options())),
+            _ => Some("not implemented :(".to_string()),
+        };
+
+        let Some(content) = content else {
+            return;
+        };
+
+        let contents: Vec<CreateEmbed> = content
+            .graphemes(true)
+            .collect::<Vec<&str>>()
+            .chunks(2000)
+            .map(|chunk| chunk.concat())
+            .map(|m| CreateEmbed::new().description(m))
+            .collect();
+
+        let builder = if command.data.name.as_str() == "pregas" {
+            let poll = CreatePoll::new()
+                .question("Como você avalia a precisão da tirada de pregas?")
+                .answers(vec![
+                    CreatePollAnswer::new().text("Tirou foi pouco"),
+                    CreatePollAnswer::new().text("E ainda tinha prega?"),
+                    CreatePollAnswer::new().text("Arranca de novo"),
+                ])
+                .duration(Duration::new(3_600, 0));
+
+            CreateInteractionResponseFollowup::new()
+                .add_embeds(contents)
+                .poll(poll)
+        } else {
+            CreateInteractionResponseFollowup::new().add_embeds(contents)
+        };
+
+        if let Err(why) = command.create_followup(&ctx.http, builder).await {
+            error!("Failed to send message in channel: {why}");
         }
     }
 
@@ -70,7 +82,7 @@ impl EventHandler for Handler {
             .set_commands(
                 &ctx.http,
                 vec![
-                    // commands::gepeto::register(),
+                    commands::gepeto::register(),
                     commands::vtnc::register(),
                     commands::pregas::register(),
                 ],
