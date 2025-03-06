@@ -78,6 +78,14 @@ impl EventHandler for Handler {
                 .expect("'CML_ID' must be an integer"),
         );
 
+        let somente_onda_id = GuildId::new(
+            self.secrets
+                .get("SOMENTE_ONDA_ID")
+                .expect("'SOMENTE_ONDA_ID' was not found")
+                .parse()
+                .expect("'SOMENTE_ONDA_ID' must be an integer"),
+        );
+
         let commands = cml_id
             .set_commands(
                 &ctx.http,
@@ -93,6 +101,21 @@ impl EventHandler for Handler {
             Ok(commands) => {
                 info!("Registered CML commands!");
                 debug!("CML commands: {commands:#?}");
+            }
+            Err(why) => error!("Failed to register commands: {why:?}"),
+        }
+
+        let commands = somente_onda_id
+            .set_commands(
+                &ctx.http,
+                vec![commands::gepeto::register(), commands::vtnc::register()],
+            )
+            .await;
+
+        match commands {
+            Ok(commands) => {
+                info!("Registered Somente Onda commands!");
+                debug!("Somente Onda commands: {commands:#?}");
             }
             Err(why) => error!("Failed to register commands: {why:?}"),
         }
