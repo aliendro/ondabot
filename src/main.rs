@@ -33,7 +33,7 @@ async fn serenity(
                     Url::parse("https://api.groq.com/openai/v1/chat/completions")
                         .context("Failed to parse URL")?,
                 )
-                .engine(ChatGPTEngine::Custom("deepseek-r1-distill-qwen-32b"))
+                .engine(ChatGPTEngine::Custom("gemma2-9b-it"))
                 .build()
                 .context("Error building OpenAI configuration")?,
         )
