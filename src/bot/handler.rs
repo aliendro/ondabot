@@ -30,6 +30,7 @@ impl EventHandler for Handler {
             "gepeto" => Some(commands::gepeto::run(&command.data.options(), &self).await),
             "vtnc" => Some(commands::vtnc::run(&command.data.options())),
             "pregas" => Some(commands::pregas::run(&command.data.options())),
+            "lulu" => Some(commands::lulu::run(&command.data.options())),
             _ => Some("not implemented :(".to_string()),
         };
 
@@ -40,7 +41,7 @@ impl EventHandler for Handler {
         let contents: Vec<CreateEmbed> = content
             .graphemes(true)
             .collect::<Vec<&str>>()
-            .chunks(2000)
+            .chunks(5500)
             .map(|chunk| chunk.concat())
             .map(|m| CreateEmbed::new().description(m))
             .collect();
@@ -108,7 +109,11 @@ impl EventHandler for Handler {
         let commands = somente_onda_id
             .set_commands(
                 &ctx.http,
-                vec![commands::gepeto::register(), commands::vtnc::register()],
+                vec![
+                    commands::gepeto::register(),
+                    commands::vtnc::register(),
+                    commands::lulu::register(),
+                ],
             )
             .await;
 
